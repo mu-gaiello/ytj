@@ -1,0 +1,15 @@
+#!/bin/bash
+
+
+#Write the yt script to download and play a YouTube ™ video URL. (Hopefully, YouTube hasn't changed 
+#anything recently.) The cclive command should be capable of downloading YouTube videos by URL. 
+#The mplayer command should be capable of playing the YouTube video formats.
+
+#put quiet cclive in the background w/ &:
+cclive -O ytvid $1 & # $1 must be surrounded with ' ' or ""
+
+sleep 5
+
+mplayer ytvid
+
+rn ytvid #Clean up 
