@@ -1,0 +1,58 @@
+#!/bin/bash
+
+#Bruce Lukens
+#Brian Zerfass
+#Giuseppe Aiello
+
+#Project 3
+
+
+
+KEEP=0
+USAGE="Usage: -h: display usage statement
+	-k: keep downloaded video files."
+for option in "$@"; do
+	case ${option} in
+		-h ) echo "$USAGE" ; exit ;;
+		-k ) echo -k keep downloaded video files. ; shift ;;
+	esac
+if [ "$@" == "-k" ]
+then
+$KEEP=1
+fi
+done
+
+# Creates a directory to store the videos related to the search term
+vid_directory=$(echo $1 | sed "s/  */_/g" | sed "s/[^A-Za-z0-9_@-\.]//g")
+mkdir $vid_directory
+cd $vid_directory
+
+# Creates the search URL
+SURL="http://www.youtube.com/results?search_query="$(echo $1 | 
+	sed "s/  */+/g")
+
+# Searches the source code of the SURL for "yt-lockup2-video" and sends output to ytj.results
+wget "$SURL" -O - 2> /dev/null | grep yt-lockup2-video > ytj.results
+
+# While loop to get all IDs and titles of videos
+i=3 #set to 3 to skip first 2 ads
+while [ $i -le 18 ]
+do
+ID=$(cat ytj.results | head -$i | tail -1 | sed "s/^.*data-context-item-id=\"//" | sed "s/\" data-context-item-views.*$//")
+TITLE=$(cat ytj.results | head -$i | tail -1 | sed "s/^.*data-context-item-title=\"//" | sed "s/\" data-context-item-type.*$//" | sed "s/  */_/g" | sed "s/[^A-Za-z0-9_@-\.]//g")
+filetitle=$TITLE.webm # Creates variable to store the webm version of the video
+filetitles=$filetitles" "$filetitle # Creates cariable to store all file titles
+VURL="http://www.youtube.com/watch?v="$(echo $ID) # Creates video URL
+# Put quiet cclive in the background
+cclive -q -O $filetitle $VURL &
+i=$(( $i + 1 )) # Increment i
+done # End while loop
+
+sleep 10; mplayer -really-quiet -vo null $filetitles < /dev/null # runs mplayer in the background
+rm ytj.results
+
+if [ $KEEP = 0 ]
+then
+cd ..
+rm -r $vid_directory
+fi
